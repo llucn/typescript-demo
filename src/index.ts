@@ -1,85 +1,69 @@
 import { City, Person, Product, Employee } from "./type";
 
-console.log("App start");
-let people = [new Person("Bob Smith", "London"), new Person("Dora Peters", "New York")];
-let products = [new Product("Running Shoes", 100), new Product("Hat", 25)];
-let cities = [new City("London", 8136000), new City("Paris", 2141000)];
-let employees = [new Employee("Bob Smith", "Sales"), new Employee("Alice Jones", "Sales")];
-// [...people, ...products].forEach(item => console.log(`Item: ${item.name}`));
+export let products = [new Product("Running Shoes", 100), new Product("Hat", 25)];
 
-export type dataType = { name: string }; // Restrict type
+export type shapeType = { name: string };
 
-export class DataCollection<T extends dataType> { // Generic type parameter
-  protected items: T[] = [];
-  constructor(initialItems: T[]) {
-    this.items.push(...initialItems);
+export class Collection<T extends shapeType, K extends keyof T> implements Iterable<T> {
+  protected items: Map<T[K], T>;
+  protected keyName: K;
+
+  constructor(initialItems: T[] = [], initKeyName: K) {
+    this.keyName = initKeyName;
+    this.items = new Map<T[K], T>();
+    initialItems.forEach(initialItem => this.add(initialItem));
   }
-  filter<V extends T>(predicate: (target: T) => target is V): V[] {
-    return this.items.filter(item => predicate(item)) as V[];
+
+  add(...newItems: T[]): void {
+    newItems.forEach(newItem => this.items.set(newItem[this.keyName], newItem));
   }
-  collate<U>(targetData: U[], itemProp: keyof T, targetProp: keyof U): (T & U)[] {
-    let results: (T & U)[] = [];
-    this.items.forEach(item => {
-      let match = targetData.find(d => d[targetProp] + '' === item[itemProp] + '');
-      if (match !== undefined) {
-        results.push({ ...match, ...item });
-      }
-    });
-    return results;
+
+  get(name: T[K]): T {
+    return this.items.get(name)!;
   }
-  add(newItem: T) {
-    this.items.push(newItem);
+
+  get count(): number {
+    return this.items.size
   }
-  getNames(): string[] {
-    return this.items.map(item => item.name);
-  }
-  getItem(index: number): T {
-    return this.items[index];
-  }
-  static reverse<A>(items: A[]): A[] {
-    return items.reverse();
+
+  [Symbol.iterator](): Iterator<T> {
+    return this.items.values();
   }
 }
 
-export class SearchableCollection<T extends dataType> extends DataCollection<T> {
-  constructor(initialItems: T[]) {
-    super(initialItems);
-  }
-  find(name: string): T | undefined {
-    return this.items.find(item => item.name === name);
-  }
-}
+export let productCollection = new Collection(products, "name");
+console.log(`There are ${productCollection.count} products`);
 
-export let peopleData = new SearchableCollection<Person>(people); // Generic type argument
-export let foundPerson = peopleData.find("Bob Smith");
-if (foundPerson) {
-  console.log(`Found person: ${foundPerson.name}, ${foundPerson.city}`);
-}
-console.log(`Person Names: ${peopleData.getNames().join(", ")}`);
-export let firstPerson = peopleData.getItem(0);
-console.log(`First Person: ${firstPerson.name}, ${firstPerson.city}`);
-export let collatedData = peopleData.collate<City>(cities, 'city', 'name');
-// collatedData.forEach(c => console.log(`${c.name}, ${c.city}, ${c.population}`));
-console.table(collatedData);
-export let empData = peopleData.collate<Employee>(employees, "name", "name");
-console.table(empData);
+export let p = productCollection.get("Hat");
+console.log(`Product: ${p.name}, ${p.price}`);
 
-export let productData = new DataCollection<Product>(products);
-console.log(`Product Names: ${productData.getNames().join(", ")}`);
-export let firstProduct = productData.getItem(0);
-console.log(`First Product: ${firstProduct.name}, ${firstProduct.price}`);
+console.table([...productCollection]);
 
-export let cityData = new DataCollection<City>(cities);
-console.log(`City Names: ${cityData.getNames().join(", ")}`);
+export type MappedProduct = {
+  [P in keyof Product]: Product[P] extends null ? Product[P] : (Product[P] | undefined)
+};
 
+//let ne: never = undefined;
+let mappedProduct: MappedProduct = { name: "Coka", price: 10 };
+console.table(mappedProduct);
 
-function isProduct(target: dataType): target is Product {
-  return target instanceof Product;
-}
-export let mixedData = new DataCollection<Person | Product >([...people, ...products]);
-export let filteredProducts = mixedData.filter<Product>(isProduct);
-console.table(filteredProducts);
-// filteredProducts.forEach(p => console.log(`Product: ${p.name}, ${p.price}`));
+export type AllowString<T> = {
+  [P in keyof T]?: T[P] | string
+};
+export let mapperCity: AllowString<City> = { name: "Chengdu", population: 10000000 };
+console.table(mapperCity);
 
-let reversedCities: City[] = DataCollection.reverse(cities);
-console.table(reversedCities);
+export type MakeReadonly<T> = {
+  readonly [P in keyof T]: T[P]
+};
+export let mapperPerson: MakeReadonly<Person> = { name: "Mian Wang", city: "Zhuji" };
+console.table(mapperPerson);
+
+export let p1: Omit<City, "name" | "population"> = { name: "x" };
+console.table(p1);
+
+export type CustomMapped<K extends keyof any, T> = {
+  [P in K]: T
+};
+export let p2: CustomMapped<"name" | "age", string> = { name: "AM", age: "10" };
+console.table(p2);
