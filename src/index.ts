@@ -104,6 +104,26 @@ const sum: string = total(products, "price", true);
 console.log(`Sum: ${sum}`);
 
 // ---
+type targetKey<T> = T extends (infer U)[] ? keyof U : keyof T;
+function getValue<T, P extends targetKey<T>>(data: T, prop: P): T[P] {
+  if (Array.isArray(data)) {
+    return data[0][prop];
+  } else {
+    return data[prop];
+  }
+}
+let p10 = getValue(products[0], "name");
+let p11 = getValue(products, "price");
+console.table([p10, p11]);
 
+type Result<T> = T extends (...args: any) => infer R ? R : never;
+function processArray<T, Func extends (t: T) => any>(data: T[], func: Func): Result<Func>[] {
+  return data.map(e => func(e));
+} 
+let selectName = (p: Product) => p.name;
+let p12 = processArray(products, selectName);
+console.table(p12);
 
+// ---
+type PS = ConstructorParameters<typeof Person>;
 
