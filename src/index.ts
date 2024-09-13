@@ -1,4 +1,5 @@
 import { City, Person, Product, Employee } from "./type";
+import Form, { createForm, createFormAsync } from "./formio";
 
 export let products = [new Product("Running Shoes", 100), new Product("Hat", 25)];
 
@@ -127,3 +128,9 @@ console.table(p12);
 // ---
 type PS = ConstructorParameters<typeof Person>;
 
+// --
+const form = new Form();
+const syncret = createForm().then(console.log);
+console.log('SYNC RET:', syncret);
+const asyncret = createFormAsync().then(console.log);
+console.log('ASYNC RET:', asyncret);

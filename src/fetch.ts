@@ -1,4 +1,4 @@
-const url = "http://tt.weather.sojson.com/api/weather/city/101030100";
+const url = "http://t.weather.sojson.com/api/weather/city/101030100";
 async function test() {
   const resp = await fetch(url, {
     method: 'GET'
